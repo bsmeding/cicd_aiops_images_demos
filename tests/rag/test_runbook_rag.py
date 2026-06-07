@@ -18,7 +18,10 @@ class _FakeRAGClient:
         from types import SimpleNamespace
 
         return SimpleNamespace(
-            text="To recover a failed BGP peer, check the neighbor statement and verify reachability.",
+            text=(
+                "To recover a failed BGP peer, check the neighbor"
+                " statement and verify reachability."
+            ),
             citations=[SimpleNamespace(path="docs/runbooks/bgp_recovery.md")],
         )
 
