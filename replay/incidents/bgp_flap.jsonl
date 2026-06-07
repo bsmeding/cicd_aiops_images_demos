@@ -1,0 +1,4 @@
+{"id": "bgp-001", "message": "BGP sessions down on edge routers in site AMS1", "expected_label": "bgp_issue", "expected_severity": "high"}
+{"id": "bgp-002", "message": "BGP neighbor 10.0.0.2 went down on core-ams1", "expected_label": "bgp_issue", "expected_severity": "high"}
+{"id": "bgp-003", "message": "Multiple BGP peers flapping on edge-fra1 — route instability detected", "expected_label": "bgp_issue", "expected_severity": "high"}
+{"id": "bgp-004", "message": "BGP session to 192.168.1.1 dropped, AS 65001", "expected_label": "bgp_issue", "expected_severity": "high"}

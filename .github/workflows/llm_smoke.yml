@@ -1,0 +1,31 @@
+# LLM provider smoke test – manual dispatch only.
+# Validates that OpenAI and Anthropic APIs are reachable and return a valid response.
+# Runs across ubuntu, debian, and alpine image variants.
+
+name: LLM Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: LLM smoke – ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - bsmeding/aiops_cicd_ubuntu:latest
+          - bsmeding/aiops_cicd_debian:latest
+          - bsmeding/aiops_cicd_alpine3:latest
+    container:
+      image: ${{ matrix.image }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run LLM smoke script
+        run: python tools/llm_smoke.py
+      - name: Run provider smoke tests
+        run: pytest tests/provider_smoke -vv

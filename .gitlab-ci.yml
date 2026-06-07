@@ -1,0 +1,79 @@
+# GitLab CI demo – agent tool-call tests + incident replay
+# Uses bsmeding/aiops_cicd_* images as the job executor.
+# Mirror of the GitHub Actions weekly demo for GitLab / Gitea / Forgejo users.
+
+stages:
+  - lint
+  - test
+  - eval
+
+# ── Lint ──────────────────────────────────────────────────────────────────────
+lint:
+  stage: lint
+  image: bsmeding/aiops_cicd_ubuntu:latest
+  script:
+    - ruff check .
+    - mypy src tests --ignore-missing-imports
+
+# ── Schema validation (no LLM) ────────────────────────────────────────────────
+schema_contracts:
+  stage: test
+  image: bsmeding/aiops_cicd_debian:latest
+  script:
+    - python tools/validate_json_schemas.py schemas/
+    - pytest tests/contracts -vv
+
+# ── Incident replay (no LLM) ─────────────────────────────────────────────────
+incident_replay:
+  stage: test
+  image: bsmeding/aiops_cicd_debian:latest
+  script:
+    - python replay/run_replay.py replay/incidents/*.jsonl
+        --output build/replay-results.json
+    - python replay/check_regressions.py build/replay-results.json
+  artifacts:
+    when: always
+    paths:
+      - build/replay-results.json
+
+# ── Agent tool-call tests ─────────────────────────────────────────────────────
+agent_tests:
+  stage: test
+  image: bsmeding/aiops_cicd_ubuntu:latest
+  variables:
+    OPENAI_API_KEY: $OPENAI_API_KEY
+  script:
+    - pytest tests/agents -vv --junitxml=agent-results.xml
+  artifacts:
+    when: always
+    reports:
+      junit: agent-results.xml
+
+# ── Prompt regression ─────────────────────────────────────────────────────────
+prompt_regression:
+  stage: test
+  image: bsmeding/aiops_cicd_ubuntu:latest
+  variables:
+    OPENAI_API_KEY: $OPENAI_API_KEY
+  script:
+    - pytest tests/prompts -vv --junitxml=prompt-results.xml
+  artifacts:
+    when: always
+    reports:
+      junit: prompt-results.xml
+
+# ── RAG evaluation ────────────────────────────────────────────────────────────
+ragas_eval:
+  stage: eval
+  image: bsmeding/aiops_cicd_ubuntu:latest
+  variables:
+    OPENAI_API_KEY: $OPENAI_API_KEY
+  script:
+    - python rag/build_index.py --source docs/runbooks --output build/index
+    - python eval/run_ragas.py
+        --dataset eval/datasets/network_runbooks.jsonl
+        --output build/ragas-report.json
+  artifacts:
+    when: always
+    paths:
+      - build/ragas-report.json

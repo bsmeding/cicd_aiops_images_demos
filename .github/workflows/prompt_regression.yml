@@ -1,0 +1,38 @@
+# Prompt regression – runs on every PR and push to main.
+# Fast deterministic subset (contracts, replay) always runs.
+# LLM-backed prompt tests run only when OPENAI_API_KEY is available.
+
+name: Prompt Regression
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  deterministic:
+    name: Contracts & replay (no LLM)
+    runs-on: ubuntu-latest
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: ruff check .
+      - name: Schema validation
+        run: python tools/validate_json_schemas.py schemas/
+      - name: Contract & replay tests
+        run: pytest tests/contracts tests/replay -vv
+
+  prompt-tests:
+    name: Prompt regression (requires OPENAI_API_KEY)
+    runs-on: ubuntu-latest
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run prompt tests
+        run: pytest tests/prompts -vv

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "incident_triage",
+  "title": "IncidentTriage",
+  "description": "Structured output schema for the incident router prompt.",
+  "type": "object",
+  "required": ["severity", "summary", "recommended_action"],
+  "additionalProperties": false,
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Assessed severity of the incident."
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Short human-readable summary of the incident."
+    },
+    "recommended_action": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Recommended first-response action."
+    },
+    "affected_devices": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional list of affected device names."
+    }
+  }
+}

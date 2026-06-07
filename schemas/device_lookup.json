@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "device_lookup",
+  "title": "DeviceLookup",
+  "description": "Response schema for Nautobot device lookup tool calls.",
+  "type": "object",
+  "required": ["name", "site"],
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Device hostname."
+    },
+    "site": {
+      "type": "string",
+      "description": "Site the device belongs to."
+    },
+    "role": {
+      "type": "string",
+      "description": "Device role (e.g. edge-router, leaf-switch)."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "planned", "staged", "failed", "decommissioning"],
+      "description": "Nautobot device status."
+    },
+    "primary_ip": {
+      "type": "string",
+      "description": "Primary IP address."
+    }
+  }
+}

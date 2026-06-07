@@ -1,0 +1,150 @@
+# Weekly demonstration of bsmeding/aiops_cicd_* images
+# Runs every Monday at 08:00 UTC and can be triggered manually.
+# Covers all use-cases: prompt regression, structured output, RAG eval, LLM smoke,
+# agent tool-call tests, and incident replay — across multiple image variants.
+
+name: Weekly AIOps CI/CD Demo
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # every Monday 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  # ── 1. Lint & type-check ─────────────────────────────────────────────────────
+  lint:
+    name: Lint & type-check (ubuntu)
+    runs-on: ubuntu-latest
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ruff
+        run: ruff check .
+      - name: mypy
+        run: mypy src tests --ignore-missing-imports
+
+  # ── 2. JSON schema + contract tests (no LLM, no secrets) ─────────────────────
+  contracts:
+    name: Schema contracts (debian)
+    runs-on: ubuntu-latest
+    needs: lint
+    container:
+      image: bsmeding/aiops_cicd_debian:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON schemas
+        run: python tools/validate_json_schemas.py schemas/
+      - name: Contract tests
+        run: pytest tests/contracts -vv
+
+  # ── 3. Incident replay – deterministic, no LLM calls ─────────────────────────
+  replay:
+    name: Incident replay (rockylinux)
+    runs-on: ubuntu-latest
+    needs: lint
+    container:
+      image: bsmeding/aiops_cicd_rockylinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run replay
+        run: |
+          python replay/run_replay.py replay/incidents/*.jsonl \
+            --output build/replay-results.json
+          python replay/check_regressions.py build/replay-results.json
+      - name: Upload replay results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: replay-results
+          path: build/replay-results.json
+
+  # ── 4. Prompt regression tests ────────────────────────────────────────────────
+  prompt-regression:
+    name: Prompt regression (ubuntu2404)
+    runs-on: ubuntu-latest
+    needs: contracts
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:ubuntu2404
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prompt tests
+        run: pytest tests/prompts -vv --junitxml=prompt-results.xml
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prompt-results
+          path: prompt-results.xml
+
+  # ── 5. Agent tool-call tests ──────────────────────────────────────────────────
+  agent-tests:
+    name: Agent tool-call tests (ubuntu)
+    runs-on: ubuntu-latest
+    needs: contracts
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Agent tests
+        run: pytest tests/agents -vv --junitxml=agent-results.xml
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-results
+          path: agent-results.xml
+
+  # ── 6. RAG evaluation ─────────────────────────────────────────────────────────
+  rag-eval:
+    name: RAG evaluation (ubuntu)
+    runs-on: ubuntu-latest
+    needs: contracts
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build RAG index
+        run: python rag/build_index.py --source docs/runbooks --output build/index
+      - name: RAG evaluation
+        run: pytest tests/rag -vv --junitxml=rag-results.xml
+      - name: Run Ragas evaluation
+        run: |
+          python eval/run_ragas.py \
+            --dataset eval/datasets/network_runbooks.jsonl \
+            --output build/ragas-report.json
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rag-results
+          path: |
+            rag-results.xml
+            build/ragas-report.json
+
+  # ── 7. LLM provider smoke (ubuntu + debian + alpine) ─────────────────────────
+  llm-smoke:
+    name: LLM smoke – ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    needs: [prompt-regression, agent-tests]
+    strategy:
+      matrix:
+        image:
+          - bsmeding/aiops_cicd_ubuntu:latest
+          - bsmeding/aiops_cicd_debian:latest
+          - bsmeding/aiops_cicd_alpine3:latest
+    container:
+      image: ${{ matrix.image }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: LLM smoke test
+        run: python tools/llm_smoke.py

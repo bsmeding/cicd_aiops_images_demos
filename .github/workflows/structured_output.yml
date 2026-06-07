@@ -1,0 +1,22 @@
+# Structured output contract tests – validates JSON schemas and Pydantic models.
+# No LLM calls; runs on every PR against debian image.
+
+name: Structured Output Contracts
+
+on:
+  pull_request:
+
+jobs:
+  contracts:
+    name: Validate schemas & output contracts
+    runs-on: ubuntu-latest
+    container:
+      image: bsmeding/aiops_cicd_debian:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON schemas
+        run: python tools/validate_json_schemas.py schemas/
+
+      - name: Contract tests
+        run: pytest tests/contracts -vv

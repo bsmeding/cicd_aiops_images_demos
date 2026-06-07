@@ -1,0 +1,3 @@
+{"id": "ifd-001", "message": "Interface GigabitEthernet0/1 down on edge-ams1", "expected_label": "interface_down", "expected_severity": "medium"}
+{"id": "ifd-002", "message": "Link down detected on interface Gi0/2 at leaf-ams2", "expected_label": "interface_down", "expected_severity": "medium"}
+{"id": "ifd-003", "message": "Physical interface down: TenGigE0/0/0/1 on core-fra1", "expected_label": "interface_down", "expected_severity": "medium"}

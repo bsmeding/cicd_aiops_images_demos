@@ -1,0 +1,40 @@
+# RAG evaluation – triggered on PR and manual dispatch.
+# Builds a lightweight in-memory index from docs/runbooks/ and runs Ragas metrics.
+
+name: RAG Evaluation
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  rag-eval:
+    name: RAG quality evaluation
+    runs-on: ubuntu-latest
+    container:
+      image: bsmeding/aiops_cicd_ubuntu:latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build RAG index
+        run: python rag/build_index.py --source docs/runbooks --output build/index
+
+      - name: Run RAG tests
+        run: pytest tests/rag -vv --junitxml=rag-results.xml
+
+      - name: Run Ragas evaluation
+        run: |
+          python eval/run_ragas.py \
+            --dataset eval/datasets/network_runbooks.jsonl \
+            --output build/ragas-report.json
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rag-evaluation-results
+          path: |
+            rag-results.xml
+            build/ragas-report.json
