@@ -1,7 +1,6 @@
 """Thin wrapper around LiteLLM used by prompt regression tests."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from litellm import completion

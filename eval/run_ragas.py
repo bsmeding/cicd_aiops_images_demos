@@ -5,7 +5,8 @@ Each line in the dataset must have: question, answer, contexts (list), ground_tr
 
 Usage:
     python eval/run_ragas.py --dataset eval/datasets/network_runbooks.jsonl
-    python eval/run_ragas.py --dataset eval/datasets/network_runbooks.jsonl --output build/ragas-report.json
+    python eval/run_ragas.py --dataset eval/datasets/network_runbooks.jsonl \
+        --output build/ragas-report.json
 """
 from __future__ import annotations
 

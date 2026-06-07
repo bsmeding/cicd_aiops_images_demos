@@ -28,7 +28,9 @@ def main() -> None:
         print("\nFailed records:")
         for rec in data.get("records", []):
             if not rec.get("passed"):
-                print(f"  {rec['id']}: expected={rec.get('expected_label')!r}  got={rec['result']['label']!r}")
+                expected = rec.get("expected_label")
+                got = rec["result"]["label"]
+                print(f"  {rec['id']}: expected={expected!r}  got={got!r}")
                 print(f"    message: {rec['message']!r}")
         sys.exit(1)
 

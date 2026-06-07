@@ -49,7 +49,8 @@ def main() -> None:
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps({"passed": passed, "failed": failed, "records": results}, indent=2))
+    payload = {"passed": passed, "failed": failed, "records": results}
+    output.write_text(json.dumps(payload, indent=2))
 
     print(f"Replay: {passed} passed, {failed} failed → {output}")
     if failed:

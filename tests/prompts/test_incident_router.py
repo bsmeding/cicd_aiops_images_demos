@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("OPENAI_API_KEY"),
@@ -21,6 +21,11 @@ class IncidentTriage(BaseModel):
     severity: str
     summary: str
     recommended_action: str
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def normalize_severity(cls, v: str) -> str:
+        return v.lower()
 
 
 def test_router_prompt_returns_required_fields(prompt_runner):
