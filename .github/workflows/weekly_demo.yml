@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: contracts
     container:
-      image: bsmeding/aiops_cicd_ubuntu:ubuntu2404
+      image: bsmeding/aiops_cicd_ubuntu2404:latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:

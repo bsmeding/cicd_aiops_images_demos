@@ -107,10 +107,11 @@ python eval/run_ragas.py --dataset eval/datasets/network_runbooks.jsonl
 
 ## Available image tags
 
-| Tag | Base |
+| Image | Base |
 |---|---|
 | `bsmeding/aiops_cicd_ubuntu:latest` | Ubuntu 26.04 |
-| `bsmeding/aiops_cicd_ubuntu:ubuntu2404` | Ubuntu 24.04 |
+| `bsmeding/aiops_cicd_ubuntu2404:latest` | Ubuntu 24.04 |
+| `bsmeding/aiops_cicd_ubuntu2604:latest` | Ubuntu 26.04 |
 | `bsmeding/aiops_cicd_debian:latest` | Debian 13 |
 | `bsmeding/aiops_cicd_rockylinux:latest` | Rocky Linux 9 |
 | `bsmeding/aiops_cicd_alpine3:latest` | Alpine 3.23 |
